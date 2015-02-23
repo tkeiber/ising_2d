@@ -1,0 +1,95 @@
+
+# Spin ising model image analysis
+# Trevor Keiber
+# 2-19-2015
+
+# Idea: Make a 2d ising sping model with Temperature and interaction strength U and look at critical
+# critical transistion.  Then use noise fillters on the image and change colors.  Use Gausian filtering, etc.
+#Characterize regions of the phase using scikit:image package... 
+
+% pylab inline
+import pylab as pl
+from sympy import *
+import pandas as pd
+
+T=2
+Nitt=50000 # total number of Monte Carlo steps
+N=30   # linear dimension of the lattice, lattice-size= N x N\
+warm = 1000     # Number of warmup steps
+measure=100     # How often to take a measurement
+
+  #  "Radom lattice, corresponding to infinite temerature"
+latt = zeros(N)
+for i in range(N):
+    for j in range(N):
+        latt[i,j] = sign(2*rand()-1)
+
+  #  "Energy of a 2D Ising lattice at particular configuration"
+Ene = 0
+for i in range(N):
+    for j in range(N):
+        S = latt[i,j]
+        WF = latt[(i+1)%N, j] + latt[i,(j+1)%N] + latt[(i-1)%N,j] + latt[i,(j-1)%N]
+        Ene += -WF*S # Each neighbor gives energy 1.0
+Ene=Ene/2.  # Each par counted twice
+
+#Z=e**(-4/T)+4*e**(-2/T)+6*e**(-2/T)+4*e**(-1/T)+1
+PW=array([e**(-4./T),0,e**(-2./T),0,1,0,e**(2./T),0,e**(4./T)]) 
+
+
+Mn=sum(latt)         # Starting magnetization
+    
+Naver=0.0     # Measurements
+Eaver=0.0
+Maver=0.0
+    
+N2 = N*N
+for itt in range(Nitt):
+    t = int(rand()*N2)
+    (i,j) = (t % N, t/N)
+    S = latt[i,j]
+    WF = latt[(i+1)%N, j] + latt[i,(j+1)%N] + latt[(i-1)%N,j] + latt[i,(j-1)%N]
+    P = PW[4+S*WF]
+    if P>rand(): # flip the spin
+        latt[i,j] = -S
+        Ene += 2*S*WF
+        Mn -= 2*S
+            
+    if itt>warm and itt%measure==0:
+        Naver += 1
+        Eaver += Ene
+        Maver += Mn
+
+Eav=float(Eaver/Naver)
+Mav=float(Maver/Naver)
+        
+print [Eav,Mav]
+
+
+w, h = N, N
+okk = [[0] * w for i in range(h)]
+
+for i in range(N):
+    for j in range(N):
+        okk[i][j]=float(latt[i,j]*1.)
+        
+pl.axes([0.025, 0.025, 0.95, 0.95])
+#pl.colorbar(shrink=.92)
+
+pl.xticks(())
+pl.yticks(())
+pl.imshow(okk, interpolation='nearest', cmap='bone', origin='lower')
+# misc.imsave('exafs_data\\30b30.png', okk)
+py.show()
+
+from scipy import ndimage
+
+gauss_denoised = ndimage.gaussian_filter(okk, 2)
+
+pl.axis('off')
+pl.title('Denoised', fontsize=20)
+pl.imshow(gauss_denoised)
+py.show()
+
+
+
