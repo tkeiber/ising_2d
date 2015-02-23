@@ -7,8 +7,8 @@
 # critical transistion.  Then use noise fillters on the image and change colors.  Use Gausian filtering, etc.
 #Characterize regions of the phase using scikit:image package... 
 
-% pylab inline
 import pylab as pl
+from pylab import *
 from sympy import *
 import pandas as pd
 
@@ -80,7 +80,7 @@ pl.xticks(())
 pl.yticks(())
 pl.imshow(okk, interpolation='nearest', cmap='bone', origin='lower')
 # misc.imsave('exafs_data\\30b30.png', okk)
-py.show()
+show()
 
 from scipy import ndimage
 
@@ -89,7 +89,7 @@ gauss_denoised = ndimage.gaussian_filter(okk, 2)
 pl.axis('off')
 pl.title('Denoised', fontsize=20)
 pl.imshow(gauss_denoised)
-py.show()
+show()
 
 
 
